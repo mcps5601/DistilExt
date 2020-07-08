@@ -1,5 +1,5 @@
 import os
-
+import gc
 import numpy as np
 import torch
 from tensorboardX import SummaryWriter
@@ -52,6 +52,7 @@ def build_trainer(args, device_id, model, optim):
     if (model):
         n_params = _tally_parameters(model)
         logger.info('* number of parameters: %d' % n_params)
+        exit()
 
     return trainer
 
@@ -187,8 +188,10 @@ class Trainer(object):
                 clss = batch.clss
                 mask = batch.mask_src
                 mask_cls = batch.mask_cls
-
-                sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
+                if (self.args.is_student == True):
+                    sent_scores, mask = self.model(src, clss, mask_cls)
+                else:
+                    sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
 
                 loss = self.loss(sent_scores, labels.float())
                 loss = (loss * mask.float()).sum()
@@ -247,7 +250,10 @@ class Trainer(object):
                             selected_ids = [[j for j in range(batch.clss.size(1)) if labels[i][j] == 1] for i in
                                             range(batch.batch_size)]
                         else:
-                            sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
+                            if (self.args.is_student == True):
+                                sent_scores, mask = self.model(src, clss, mask_cls)
+                            else:
+                                sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
 
                             loss = self.loss(sent_scores, labels.float())
                             loss = (loss * mask.float()).sum()
@@ -293,6 +299,76 @@ class Trainer(object):
 
         return stats
 
+
+
+
+    def dump_soft(self, test_iter, step, filename, cal_lead=False, cal_oracle=False):
+        """ Validate model.
+            valid_iter: validate data iterator
+        Returns:
+            :obj:`nmt.Statistics`: validation loss statistics
+        """
+        # Set model in validating mode.
+        def _get_ngrams(n, text):
+            ngram_set = set()
+            text_length = len(text)
+            max_index_ngram_start = text_length - n
+            for i in range(max_index_ngram_start + 1):
+                ngram_set.add(tuple(text[i:i + n]))
+            return ngram_set
+
+        def _block_tri(c, p):
+            tri_c = _get_ngrams(3, c.split())
+            for s in p:
+                tri_s = _get_ngrams(3, s.split())
+                if len(tri_c.intersection(tri_s)) > 0:
+                    return True
+            return False
+
+        if (not cal_lead and not cal_oracle):
+            self.model.eval()
+        #stats = Statistics()
+
+        can_path = '%s_step%d.candidate' % (self.args.result_path, step)
+        gold_path = '%s_step%d.gold' % (self.args.result_path, step)
+        with open(can_path, 'w') as save_pred:
+            with open(gold_path, 'w') as save_gold:
+                with torch.no_grad():
+                    datasets_soft = []
+                    print("Start processing {}".format(filename))
+                    for batch in test_iter:
+                        src = batch.src
+                        labels = batch.src_sent_labels
+                        segs = batch.segs
+                        clss = batch.clss
+                        mask = batch.mask_src
+                        mask_cls = batch.mask_cls
+                        
+
+                        gold = []
+                        pred = []
+
+                        if (cal_lead):
+                            selected_ids = [list(range(batch.clss.size(1)))] * batch.batch_size
+                        elif (cal_oracle):
+                            selected_ids = [[j for j in range(batch.clss.size(1)) if labels[i][j] == 1] for i in
+                                            range(batch.batch_size)]
+                        else:
+                            sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
+                            b_data_dict = {"src": src.cpu().tolist()[0], "tgt": batch.tgt.cpu().tolist()[0], "labels": labels.cpu().tolist()[0],
+                                            "soft_labels": sent_scores.cpu().tolist()[0], "segs": segs.cpu().tolist()[0], 'clss': clss.cpu().tolist()[0],
+                                            'src_txt': batch.src_str, "tgt_txt": batch.tgt_str}
+                            datasets_soft.append(b_data_dict)
+
+                    logger.info('Saving to %s' % os.path.join(os.path.split(filename)[0], 'soft_targets_large', os.path.split(filename)[-1]))
+                    torch.save(datasets_soft, os.path.join(os.path.split(filename)[0], 'soft_targets_large', os.path.split(filename)[-1]))
+                    datasets_soft = []
+                    gc.collect()
+
+
+
+
+
     def _gradient_accumulation(self, true_batchs, normalization, total_stats,
                                report_stats):
         if self.grad_accum_count > 1:
@@ -309,9 +385,16 @@ class Trainer(object):
             mask = batch.mask_src
             mask_cls = batch.mask_cls
 
-            sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
+            if (self.args.is_student == True):
+                sent_scores, mask = self.model(src, clss, mask_cls)
+                hard_labels = batch.hard_targets
+            else:
+                sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
 
-            loss = self.loss(sent_scores, labels.float())
+            if (self.args.distill_loss == True):
+                loss = self.loss(sent_scores, labels.float()) * self.args.distill_alpha + self.loss(sent_scores, hard_labels.float()) * (1 - self.args.distill_alpha)
+            else:
+                loss = self.loss(sent_scores, labels.float())
             loss = (loss * mask.float()).sum()
             (loss / loss.numel()).backward()
             # loss.div(float(normalization)).backward()

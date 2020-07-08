@@ -6,17 +6,17 @@ from __future__ import division
 
 import argparse
 import glob
-import os
+import os, sys
 import random
 import signal
 import time
 
 import torch
-
+import torch.nn as nn
 import distributed
 from models import data_loader, model_builder
 from models.data_loader import load_dataset
-from models.model_builder import ExtSummarizer
+from models.model_builder import ExtSummarizer, StudentModel
 from models.trainer_ext import build_trainer
 from others.logging import logger, init_logger
 
@@ -162,7 +162,10 @@ def validate(args, device_id, pt, step):
             setattr(args, k, opt[k])
     print(args)
 
-    model = ExtSummarizer(args, device, checkpoint)
+    if (args.is_student == True):
+        model = StudentModel(args, device, checkpoint)
+    else:
+        model = ExtSummarizer(args, device, checkpoint)
     model.eval()
 
     valid_iter = data_loader.Dataloader(args, load_dataset(args, 'valid', shuffle=False),
@@ -186,8 +189,10 @@ def test_ext(args, device_id, pt, step):
         if (k in model_flags):
             setattr(args, k, opt[k])
     print(args)
-
-    model = ExtSummarizer(args, device, checkpoint)
+    if (args.is_student == True):
+        model = StudentModel(args, device, checkpoint)
+    else:
+        model = ExtSummarizer(args, device, checkpoint)
     model.eval()
 
     test_iter = data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False),
@@ -235,11 +240,64 @@ def train_single_ext(args, device_id):
     def train_iter_fct():
         return data_loader.Dataloader(args, load_dataset(args, 'train', shuffle=True), args.batch_size, device,
                                       shuffle=True, is_test=False)
+    if (args.is_student == True):
+        model = StudentModel(args, device, checkpoint)
+    else:
+        model = ExtSummarizer(args, device, checkpoint)
 
-    model = ExtSummarizer(args, device, checkpoint)
     optim = model_builder.build_optim(args, model, checkpoint)
 
     logger.info(model)
 
     trainer = build_trainer(args, device_id, model, optim)
     trainer.train(train_iter_fct, args.train_steps)
+
+
+def load_dataset_for_soft(bert_data_path):
+    """
+    Dataset generator. Don't do extra stuff here, like printing,
+    because they will be postponed to the first loading time.
+
+    Args:
+        corpus_type: 'train' or 'valid'
+    Returns:
+        A list of dataset, the dataset(s) are lazily loaded.
+    """
+
+    def _lazy_dataset_loader(pt_file):
+        dataset = torch.load(pt_file)
+
+        return dataset
+
+    # Only one inputters.*Dataset, simple!
+
+    yield _lazy_dataset_loader(bert_data_path)
+
+
+
+def extract_soft(args, device_id, pt, step):
+    device = "cpu" if args.visible_gpus == '-1' else "cuda"
+    if (pt != ''):
+        test_from = pt
+    else:
+        test_from = args.test_from
+    logger.info('Loading checkpoint from %s' % test_from)
+    checkpoint = torch.load(test_from, map_location=lambda storage, loc: storage)
+    opt = vars(checkpoint['opt'])
+    for k in opt.keys():
+        if (k in model_flags):
+            setattr(args, k, opt[k])
+    print(args)
+
+    model = ExtSummarizer(args, device, checkpoint)
+    model.ext_layer.sigmoid = nn.Softmax(dim=1)
+    model.eval()
+
+    # assert corpus_type in ["train", "valid", "test"]
+    pts = sorted(glob.glob(args.bert_data_path + '.' + 'train' + '.[0-9]*.pt'))
+    for pt_file in pts:
+        test_iter = data_loader.Dataloader(args, load_dataset_for_soft(pt_file),
+                                       args.test_batch_size, device,
+                                       shuffle=False, is_test=True)
+        trainer = build_trainer(args, device_id, model, None)
+        trainer.dump_soft(test_iter, step, pt_file)

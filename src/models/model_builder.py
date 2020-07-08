@@ -167,11 +167,46 @@ class ExtSummarizer(nn.Module):
 
         self.to(device)
 
+    # clss = mask_cls =  B x #S
     def forward(self, src, segs, clss, mask_src, mask_cls):
+        # B x S x H
         top_vec = self.bert(src, segs, mask_src)
+        # B x #S x H
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
         sents_vec = sents_vec * mask_cls[:, :, None].float()
+        # B
         sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)
+        return sent_scores, mask_cls
+
+
+class StudentModel(nn.Module):
+    def __init__(self, args, device, checkpoint):
+        super(StudentModel, self).__init__()
+        self.args = args
+        self.device = device
+
+        # 30522: vocab_size of BertTokenizer
+        self.embedding = nn.Embedding(30522, args.ext_hidden_size)
+        self.transformer = ExtTransformerEncoder(self.args.ext_hidden_size, self.args.ext_ff_size, self.args.ext_heads,
+                                                self.args.ext_dropout, self.args.ext_layers)
+        if checkpoint is not None:
+            self.load_state_dict(checkpoint['model'], strict=True)
+        else:              
+            if args.param_init != 0.0:
+                for p in self.transformer.parameters():
+                    p.data.uniform_(-args.param_init, args.param_init)
+            if args.param_init_glorot:
+                for p in self.transformer.parameters():
+                    if p.dim() > 1:
+                        xavier_uniform_(p)
+
+        self.to(device)
+
+    def forward(self, src, clss, mask_cls):
+        top_vec = self.embedding(src)
+        sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
+        sents_vec = sents_vec * mask_cls[:, :, None].float()
+        sent_scores = self.transformer(sents_vec, mask_cls).squeeze(-1)
         return sent_scores, mask_cls
 
 
