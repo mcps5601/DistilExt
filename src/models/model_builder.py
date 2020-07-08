@@ -8,6 +8,7 @@ from torch.nn.init import xavier_uniform_
 from models.decoder import TransformerDecoder
 from models.encoder import Classifier, ExtTransformerEncoder
 from models.optimizers import Optimizer
+from models.embedding_distill import embedding_distill
 
 def build_optim(args, model, checkpoint):
     """ Build optimizer """
@@ -184,11 +185,17 @@ class StudentModel(nn.Module):
         super(StudentModel, self).__init__()
         self.args = args
         self.device = device
+        self.embedding = embedding_distill(self.args)
 
         # 30522: vocab_size of BertTokenizer
-        self.embedding = nn.Embedding(30522, args.ext_hidden_size)
-        self.transformer = ExtTransformerEncoder(self.args.ext_hidden_size, self.args.ext_ff_size, self.args.ext_heads,
-                                                self.args.ext_dropout, self.args.ext_layers)
+        # self.embedding = nn.Embedding(30522, args.ext_hidden_size)
+        self.transformer = ExtTransformerEncoder(
+                self.args.ext_hidden_size, 
+                self.args.ext_ff_size, 
+                self.args.ext_heads,
+                self.args.ext_dropout, 
+                self.args.ext_layers
+            )
         if checkpoint is not None:
             self.load_state_dict(checkpoint['model'], strict=True)
         else:              
@@ -202,8 +209,8 @@ class StudentModel(nn.Module):
 
         self.to(device)
 
-    def forward(self, src, clss, mask_cls):
-        top_vec = self.embedding(src)
+    def forward(self, src, segs, clss, mask_cls):
+        top_vec = self.embedding(src, segs)
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
         sents_vec = sents_vec * mask_cls[:, :, None].float()
         sent_scores = self.transformer(sents_vec, mask_cls).squeeze(-1)

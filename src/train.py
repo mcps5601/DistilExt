@@ -30,10 +30,10 @@ if __name__ == '__main__':
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
 
-    parser.add_argument("-mode", default='test', type=str, choices=['train', 'validate', 'test', 'get_soft'])
+    parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test', 'get_soft'])
     parser.add_argument("-distill_loss", type=str2bool, nargs='?',const=True, default=True)
     parser.add_argument("-distill_alpha", default=0.6, type=float)
-    parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=False)
+    parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=True)
 
     #parser.add_argument("-bert_data_path", default='../bert_data/bert_data_cnndm_final/cnndm')
     parser.add_argument("-bert_data_path", default='../bert_data/bert_data_cnndm_final/soft_targets/cnndm')
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     # params for EXT
     #parser.add_argument("-ext_dropout", default=0.1, type=float)
     parser.add_argument("-ext_dropout", default=0.1, type=float)
-    parser.add_argument("-ext_layers", default=2, type=int)
+    parser.add_argument("-ext_layers", default=6, type=int)
     parser.add_argument("-ext_hidden_size", default=768, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)
@@ -108,11 +108,11 @@ if __name__ == '__main__':
     parser.add_argument('-log_file', default='../logs/cnndm.log')
     parser.add_argument('-seed', default=666, type=int)
 
-    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=True)
+    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=False)
 
     # uncomment the line below to extract soft labels
-    parser.add_argument("-test_from", default='/data/PreSumm/src/MODEL_PATH/trained_cnndm_ext/model_step_18000.pt')
-    #parser.add_argument("-test_from", default='')
+    #parser.add_argument("-test_from", default='/data/PreSumm/src/MODEL_PATH/trained_cnndm_ext/model_step_18000.pt')
+    parser.add_argument("-test_from", default='')
     parser.add_argument("-test_start_from", default=-1, type=int)
 
     parser.add_argument("-train_from", default='')

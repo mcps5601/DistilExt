@@ -52,7 +52,6 @@ def build_trainer(args, device_id, model, optim):
     if (model):
         n_params = _tally_parameters(model)
         logger.info('* number of parameters: %d' % n_params)
-        exit()
 
     return trainer
 
@@ -189,7 +188,7 @@ class Trainer(object):
                 mask = batch.mask_src
                 mask_cls = batch.mask_cls
                 if (self.args.is_student == True):
-                    sent_scores, mask = self.model(src, clss, mask_cls)
+                    sent_scores, mask = self.model(src, segs, clss, mask_cls)
                 else:
                     sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
 
@@ -251,7 +250,7 @@ class Trainer(object):
                                             range(batch.batch_size)]
                         else:
                             if (self.args.is_student == True):
-                                sent_scores, mask = self.model(src, clss, mask_cls)
+                                sent_scores, mask = self.model(src, segs, clss, mask_cls)
                             else:
                                 sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
 
@@ -386,7 +385,7 @@ class Trainer(object):
             mask_cls = batch.mask_cls
 
             if (self.args.is_student == True):
-                sent_scores, mask = self.model(src, clss, mask_cls)
+                sent_scores, mask = self.model(src, segs, clss, mask_cls)
                 hard_labels = batch.hard_targets
             else:
                 sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
