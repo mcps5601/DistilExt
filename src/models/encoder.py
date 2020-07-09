@@ -99,5 +99,6 @@ class ExtTransformerEncoder(nn.Module):
         sent_scores = self.sigmoid(self.wo(x))
         sent_scores = sent_scores.squeeze(-1) * mask.float()
 
-        return sent_scores
+        return sent_scores, x
 
+#class EncoderForDistill(nn.Module):

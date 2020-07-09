@@ -27,11 +27,12 @@ def str2bool(v):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-exp_name", default='soft+hard/bert_emb/no_alpha/transformer4', type=str)
+    parser.add_argument("-exp_name", default='soft+hard/bert_emb/no_alpha/transformer2/test', type=str)
+    #parser.add_argument("-exp_name", default='test', type=str)
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
 
-    parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test', 'get_soft'])
+    parser.add_argument("-mode", default='validate', type=str, choices=['train', 'validate', 'test', 'get_soft'])
     parser.add_argument("-distill_loss", type=str2bool, nargs='?',const=True, default=True)
     #parser.add_argument("-distill_alpha", default=0.6, type=float)
     parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=True)
@@ -71,7 +72,7 @@ if __name__ == '__main__':
     # params for EXT
     #parser.add_argument("-ext_dropout", default=0.1, type=float)
     parser.add_argument("-ext_dropout", default=0.1, type=float)
-    parser.add_argument("-ext_layers", default=4, type=int)
+    parser.add_argument("-ext_layers", default=2, type=int)
     parser.add_argument("-ext_hidden_size", default=768, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)
@@ -100,7 +101,7 @@ if __name__ == '__main__':
     parser.add_argument("-save_checkpoint_steps", default=1000, type=int)
     parser.add_argument("-accum_count", default=1, type=int)
     parser.add_argument("-report_every", default=50, type=int)
-    parser.add_argument("-train_steps", default=50000, type=int)
+    parser.add_argument("-train_steps", default=30000, type=int)
     parser.add_argument("-recall_eval", type=str2bool, nargs='?',const=True,default=False)
 
 
@@ -129,7 +130,7 @@ if __name__ == '__main__':
     if not os.path.exists(log_path):
         os.makedirs(log_path)
     init_logger(os.path.join(log_path, os.path.split(args.log_file)[1]))
-    
+
     device = "cpu" if args.visible_gpus == '-1' else "cuda"
     device_id = 0 if device == "cuda" else -1
 

@@ -172,9 +172,14 @@ class ExtSummarizer(nn.Module):
     def forward(self, src, segs, clss, mask_src, mask_cls):
         # B x S x H
         top_vec = self.bert(src, segs, mask_src)
+        print("src:", mask_src.size())
+        print("tvec:", top_vec.size())
         # B x #S x H
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
         sents_vec = sents_vec * mask_cls[:, :, None].float()
+        print("cls:", mask_cls.size())
+        print("svec:", sents_vec.size())
+        exit()
         # B
         sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)
         return sent_scores, mask_cls
@@ -209,11 +214,19 @@ class StudentModel(nn.Module):
 
         self.to(device)
 
-    def forward(self, src, segs, clss, mask_cls):
+    def forward(self, src, segs, clss, mask_src, mask_cls):
+        # B x S x H
         top_vec = self.embedding(src, segs)
+        
+        # mask_src
+        _, top_vec = self.transformer(top_vec, mask_src)
+
+        # B x #S x H
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
         sents_vec = sents_vec * mask_cls[:, :, None].float()
-        sent_scores = self.transformer(sents_vec, mask_cls).squeeze(-1)
+        
+        # B
+        sent_scores = self.transformer(sents_vec, mask_cls)[0].squeeze(-1)
         return sent_scores, mask_cls
 
 
