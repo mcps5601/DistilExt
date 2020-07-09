@@ -5,7 +5,7 @@
 from __future__ import division
 
 import argparse
-import os
+import os, json
 from others.logging import init_logger
 from train_abstractive import validate_abs, train_abs, baseline, test_abs, test_text_abs
 from train_extractive import train_ext, validate_ext, test_ext, extract_soft
@@ -27,12 +27,13 @@ def str2bool(v):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument("-exp_name", default='soft+hard/bert_emb/no_alpha/transformer4', type=str)
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
 
     parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test', 'get_soft'])
     parser.add_argument("-distill_loss", type=str2bool, nargs='?',const=True, default=True)
-    parser.add_argument("-distill_alpha", default=0.6, type=float)
+    #parser.add_argument("-distill_alpha", default=0.6, type=float)
     parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=True)
 
     #parser.add_argument("-bert_data_path", default='../bert_data/bert_data_cnndm_final/cnndm')
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     # params for EXT
     #parser.add_argument("-ext_dropout", default=0.1, type=float)
     parser.add_argument("-ext_dropout", default=0.1, type=float)
-    parser.add_argument("-ext_layers", default=6, type=int)
+    parser.add_argument("-ext_layers", default=4, type=int)
     parser.add_argument("-ext_hidden_size", default=768, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)
@@ -108,7 +109,7 @@ if __name__ == '__main__':
     parser.add_argument('-log_file', default='../logs/cnndm.log')
     parser.add_argument('-seed', default=666, type=int)
 
-    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=False)
+    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=True)
 
     # uncomment the line below to extract soft labels
     #parser.add_argument("-test_from", default='/data/PreSumm/src/MODEL_PATH/trained_cnndm_ext/model_step_18000.pt')
@@ -124,7 +125,11 @@ if __name__ == '__main__':
     args.world_size = len(args.gpu_ranks)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpus
 
-    init_logger(args.log_file)
+    log_path = os.path.join(os.path.split(args.log_file)[0], args.exp_name)
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+    init_logger(os.path.join(log_path, os.path.split(args.log_file)[1]))
+    
     device = "cpu" if args.visible_gpus == '-1' else "cuda"
     device_id = 0 if device == "cuda" else -1
 
@@ -154,6 +159,11 @@ if __name__ == '__main__':
 
     elif (args.task == 'ext'):
         if (args.mode == 'train'):
+            model_save_path = os.path.join(args.model_path, args.exp_name)
+            if not os.path.exists(model_save_path):
+                os.makedirs(model_save_path)
+            with open(os.path.join(model_save_path, 'command_args.txt'), 'w') as f:
+                json.dump(args.__dict__, f, indent=2)
             train_ext(args, device_id)
         elif (args.mode == 'validate'):
             validate_ext(args, device_id)

@@ -40,7 +40,7 @@ def build_trainer(args, device_id, model, optim):
 
     print('gpu_rank %d' % gpu_rank)
 
-    tensorboard_log_dir = args.model_path
+    tensorboard_log_dir = os.path.join(args.model_path, args.exp_name)
 
     writer = SummaryWriter(tensorboard_log_dir, comment="Unmt")
 
@@ -391,7 +391,8 @@ class Trainer(object):
                 sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
 
             if (self.args.distill_loss == True):
-                loss = self.loss(sent_scores, labels.float()) * self.args.distill_alpha + self.loss(sent_scores, hard_labels.float()) * (1 - self.args.distill_alpha)
+                #loss = self.loss(sent_scores, labels.float()) * self.args.distill_alpha + self.loss(sent_scores, hard_labels.float()) * (1 - self.args.distill_alpha)
+                loss = self.loss(sent_scores, labels.float()) + self.loss(sent_scores, hard_labels.float())
             else:
                 loss = self.loss(sent_scores, labels.float())
             loss = (loss * mask.float()).sum()
@@ -439,7 +440,7 @@ class Trainer(object):
             'opt': self.args,
             'optim': self.optim,
         }
-        checkpoint_path = os.path.join(self.args.model_path, 'model_step_%d.pt' % step)
+        checkpoint_path = os.path.join(self.args.model_path, self.args.exp_name, 'model_step_%d.pt' % step)
         logger.info("Saving checkpoint %s" % checkpoint_path)
         # checkpoint_path = '%s_step_%d.pt' % (FLAGS.model_path, step)
         if (not os.path.exists(checkpoint_path)):

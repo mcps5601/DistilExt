@@ -106,7 +106,7 @@ class ErrorHandler(object):
 def validate_ext(args, device_id):
     timestep = 0
     if (args.test_all):
-        cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+        cp_files = sorted(glob.glob(os.path.join(args.model_path, args.exp_name, 'model_step_*.pt')))
         cp_files.sort(key=os.path.getmtime)
         xent_lst = []
         for i, cp in enumerate(cp_files):
@@ -123,7 +123,7 @@ def validate_ext(args, device_id):
             test_ext(args, device_id, cp, step)
     else:
         while (True):
-            cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+            cp_files = sorted(glob.glob(os.path.join(args.model_path, args.exp_name, 'model_step_*.pt')))
             cp_files.sort(key=os.path.getmtime)
             if (cp_files):
                 cp = cp_files[-1]
@@ -137,7 +137,7 @@ def validate_ext(args, device_id):
                     validate(args, device_id, cp, step)
                     test_ext(args, device_id, cp, step)
 
-            cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+            cp_files = sorted(glob.glob(os.path.join(args.model_path, args.exp_name, 'model_step_*.pt')))
             cp_files.sort(key=os.path.getmtime)
             if (cp_files):
                 cp = cp_files[-1]
@@ -209,7 +209,8 @@ def train_ext(args, device_id):
 
 
 def train_single_ext(args, device_id):
-    init_logger(args.log_file)
+    log_path = os.path.join(os.path.split(args.log_file)[0], args.exp_name)
+    init_logger(os.path.join(log_path, os.path.split(args.log_file)[1]))
 
     device = "cpu" if args.visible_gpus == '-1' else "cuda"
     logger.info('Device ID %d' % device_id)
