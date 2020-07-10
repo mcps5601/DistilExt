@@ -394,7 +394,7 @@ class Trainer(object):
                 #loss = self.loss(sent_scores, labels.float()) * self.args.distill_alpha + self.loss(sent_scores, hard_labels.float()) * (1 - self.args.distill_alpha)
                 loss = self.loss(sent_scores, labels.float()) + self.loss(sent_scores, hard_labels.float())
             else:
-                loss = self.loss(sent_scores, labels.float())
+                loss = self.loss(sent_scores, hard_labels.float())
             loss = (loss * mask.float()).sum()
             (loss / loss.numel()).backward()
             # loss.div(float(normalization)).backward()

@@ -27,10 +27,10 @@ def str2bool(v):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-exp_name", default='soft+hard/bert_emb/no_alpha/transformer2/test', type=str)
+    parser.add_argument("-exp_name", default='soft+hard/bert_emb/no_alpha/bert_transformer6', type=str)
     #parser.add_argument("-exp_name", default='test', type=str)
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
-    parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
+    #parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
 
     parser.add_argument("-mode", default='validate', type=str, choices=['train', 'validate', 'test', 'get_soft'])
     parser.add_argument("-distill_loss", type=str2bool, nargs='?',const=True, default=True)
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     # params for EXT
     #parser.add_argument("-ext_dropout", default=0.1, type=float)
     parser.add_argument("-ext_dropout", default=0.1, type=float)
-    parser.add_argument("-ext_layers", default=2, type=int)
+    parser.add_argument("-ext_layers", default=6, type=int)
     parser.add_argument("-ext_hidden_size", default=768, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)

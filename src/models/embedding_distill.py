@@ -8,10 +8,16 @@ class embedding_distill(nn.Module):
         self.args = args
         self.word_embeddings = nn.Embedding(30522, self.args.ext_hidden_size)
         self.position_embeddings = nn.Embedding(self.args.max_pos, self.args.ext_hidden_size)
-        self.token_type_embeddings = nn.Embedding(30522, self.args.ext_hidden_size)
+        self.token_type_embeddings = nn.Embedding(2, self.args.ext_hidden_size)
 
         self.LayerNorm = nn.LayerNorm(self.args.ext_hidden_size, eps=1e-12)
         self.dropout = nn.Dropout(0.1)
+
+        with torch.no_grad():
+            nn.init.normal_(self.word_embeddings.weight, mean=0.0, std=1.0)
+            nn.init.normal_(self.position_embeddings.weight, mean=0.0, std=1.0)
+            nn.init.normal_(self.token_type_embeddings.weight, mean=0.0, std=1.0)
+
 
     def forward(self, x, segs, position_ids=None):
         input_shape = x.size()

@@ -86,19 +86,23 @@ class ExtTransformerEncoder(nn.Module):
 
     def forward(self, top_vecs, mask):
         """ See :obj:`EncoderBase.forward()`"""
-
+        # B, S
         batch_size, n_sents = top_vecs.size(0), top_vecs.size(1)
+        # B X S X H
         pos_emb = self.pos_emb.pe[:, :n_sents]
+        # B X S X H
         x = top_vecs * mask[:, :, None].float()
         x = x + pos_emb
 
         for i in range(self.num_inter_layers):
             x = self.transformer_inter[i](i, x, x, ~ mask)  # all_sents * max_tokens * dim
-
+        # B X S X H
         x = self.layer_norm(x)
+        # B X S X H
         sent_scores = self.sigmoid(self.wo(x))
+        # B X S X 1
         sent_scores = sent_scores.squeeze(-1) * mask.float()
-
-        return sent_scores, x
+        # B X S
+        return sent_scores
 
 #class EncoderForDistill(nn.Module):

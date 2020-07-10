@@ -170,16 +170,20 @@ class ExtSummarizer(nn.Module):
 
     # clss = mask_cls =  B x #S
     def forward(self, src, segs, clss, mask_src, mask_cls):
+
         # B x S x H
         top_vec = self.bert(src, segs, mask_src)
-        print("src:", mask_src.size())
-        print("tvec:", top_vec.size())
         # B x #S x H
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
+        print(sents_vec.size())
+        print(mask_cls[:, :, None])
+        print('before:', sents_vec.size())
         sents_vec = sents_vec * mask_cls[:, :, None].float()
-        print("cls:", mask_cls.size())
-        print("svec:", sents_vec.size())
+        print('after:', sents_vec.size())
+        print(mask_src.size())
+        
         exit()
+
         # B
         sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)
         return sent_scores, mask_cls
@@ -217,7 +221,13 @@ class StudentModel(nn.Module):
     def forward(self, src, segs, clss, mask_src, mask_cls):
         # B x S x H
         top_vec = self.embedding(src, segs)
-        
+        '''
+        B, S = mask_src.size(0), mask_src.size(1)
+        temp_mask_cls = torch.zeros(B, S)
+        for batch_idx, index in enumerate(mask_cls):
+            temp_mask_cls[batch_idx, index] = 1
+        mask = mask_src.bool() | mask_cls
+        '''
         # mask_src
         _, top_vec = self.transformer(top_vec, mask_src)
 
@@ -227,6 +237,43 @@ class StudentModel(nn.Module):
         
         # B
         sent_scores = self.transformer(sents_vec, mask_cls)[0].squeeze(-1)
+        return sent_scores, mask_cls
+
+
+class StudentModelv2(nn.Module):
+    def __init__(self, args, device, checkpoint):
+        super(StudentModelv2, self).__init__()
+        self.args = args
+        self.device = device
+        self.bert = Bert(args.large, args.temp_dir, args.finetune_bert)
+
+        bert_config = BertConfig(self.bert.model.config.vocab_size, hidden_size=args.ext_hidden_size,
+                                num_hidden_layers=args.ext_layers, num_attention_heads=args.ext_heads, intermediate_size=args.ext_ff_size)
+        self.bert.model = BertModel(bert_config)
+        self.ext_layer = Classifier(self.bert.model.config.hidden_size)
+
+        if checkpoint is not None:
+            self.load_state_dict(checkpoint['model'], strict=True)
+        else:
+            if args.param_init != 0.0:
+                for p in self.ext_layer.parameters():
+                    p.data.uniform_(-args.param_init, args.param_init)
+            if args.param_init_glorot:
+                for p in self.ext_layer.parameters():
+                    if p.dim() > 1:
+                        xavier_uniform_(p)
+
+        self.to(device)
+
+    # clss = mask_cls =  B x #S
+    def forward(self, src, segs, clss, mask_src, mask_cls):
+        # B x S x H
+        top_vec = self.bert(src, segs, mask_src)
+        # B x #S x H
+        sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
+        sents_vec = sents_vec * mask_cls[:, :, None].float()
+        # B
+        sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)
         return sent_scores, mask_cls
 
 
