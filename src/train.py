@@ -27,12 +27,11 @@ def str2bool(v):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-exp_name", default='soft+hard/bert_emb/no_alpha/bert_transformer6', type=str)
-    #parser.add_argument("-exp_name", default='test', type=str)
+    parser.add_argument("-exp_name", default='soft+hard/bert_emb/no_alpha/', type=str)
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     #parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
 
-    parser.add_argument("-mode", default='validate', type=str, choices=['train', 'validate', 'test', 'get_soft'])
+    parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test', 'get_soft'])
     parser.add_argument("-distill_loss", type=str2bool, nargs='?',const=True, default=True)
     #parser.add_argument("-distill_alpha", default=0.6, type=float)
     parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=True)
@@ -50,24 +49,16 @@ if __name__ == '__main__':
     parser.add_argument("-max_pos", default=512, type=int)
     parser.add_argument("-use_interval", type=str2bool, nargs='?',const=True,default=True)
     parser.add_argument("-large", type=str2bool, nargs='?',const=True,default=False)
-    parser.add_argument("-load_from_extractive", default='', type=str)
+
 
     parser.add_argument("-sep_optim", type=str2bool, nargs='?',const=True,default=False)
     parser.add_argument("-lr_bert", default=2e-3, type=float)
-    #parser.add_argument("-lr_dec", default=2e-3, type=float)
+
     parser.add_argument("-use_bert_emb", type=str2bool, nargs='?',const=True,default=False)
 
     parser.add_argument("-share_emb", type=str2bool, nargs='?', const=True, default=False)
     parser.add_argument("-finetune_bert", type=str2bool, nargs='?', const=True, default=True)
-    #parser.add_argument("-dec_dropout", default=0.2, type=float)
-    #parser.add_argument("-dec_layers", default=6, type=int)
-    #parser.add_argument("-dec_hidden_size", default=768, type=int)
-    #parser.add_argument("-dec_heads", default=8, type=int)
-    #parser.add_argument("-dec_ff_size", default=2048, type=int)
-    #parser.add_argument("-enc_hidden_size", default=512, type=int)
-    #parser.add_argument("-enc_ff_size", default=512, type=int)
-    #parser.add_argument("-enc_dropout", default=0.2, type=float)
-    #parser.add_argument("-enc_layers", default=6, type=int)
+
 
     # params for EXT
     #parser.add_argument("-ext_dropout", default=0.1, type=float)
@@ -101,7 +92,7 @@ if __name__ == '__main__':
     parser.add_argument("-save_checkpoint_steps", default=1000, type=int)
     parser.add_argument("-accum_count", default=1, type=int)
     parser.add_argument("-report_every", default=50, type=int)
-    parser.add_argument("-train_steps", default=30000, type=int)
+    parser.add_argument("-train_steps", default=50000, type=int)
     parser.add_argument("-recall_eval", type=str2bool, nargs='?',const=True,default=False)
 
 

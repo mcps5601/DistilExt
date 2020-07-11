@@ -1,0 +1,15 @@
+python train.py \
+-exp_name soft+hard/bert_emb/no_alpha/bert_transformer6/step50000 \
+-task ext \
+-mode train \
+-ext_dropout 0.1 \
+-lr 0.002 \
+-visible_gpus 0 \
+-report_every 50 \
+-save_checkpoint_steps 1000 \
+-batch_size 3000 \
+-train_steps 50000 \
+-accum_count 2 \
+-use_interval true \
+-warmup_steps 10000 \
+-max_pos 512 \
