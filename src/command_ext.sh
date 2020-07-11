@@ -1,5 +1,6 @@
 python train.py \
 -exp_name soft+hard/bert_emb/no_alpha/bert_transformer6/step50000 \
+-ext_layers 6 \
 -task ext \
 -mode train \
 -ext_dropout 0.1 \
