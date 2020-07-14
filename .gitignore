@@ -5,3 +5,4 @@ json_data/*
 logs/*
 raw_data/*
 results/*
+src/models/trainer_ext.py
