@@ -104,5 +104,3 @@ class ExtTransformerEncoder(nn.Module):
         sent_scores = sent_scores.squeeze(-1) * mask.float()
         # B X S
         return sent_scores
-
-#class EncoderForDistill(nn.Module):

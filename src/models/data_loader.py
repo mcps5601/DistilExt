@@ -2,7 +2,7 @@ import bisect
 import gc
 import glob
 import random
-
+import os
 import torch
 
 from others.logging import logger
@@ -58,10 +58,10 @@ class Batch(object):
                 tgt_str = [x[-1] for x in data]
                 setattr(self, 'tgt_str', tgt_str)
 
-            if (self.args.mode == 'train'):
-                pre_hard_targets = [x[5] for x in data]
-                hard_targets = torch.tensor(self._pad(pre_hard_targets, 0))
-                setattr(self, 'hard_targets', hard_targets.to(device))
+            elif (self.args.use_soft_targets) and (self.args.mode == 'train'):
+                pre_soft_targets = [x[5] for x in data]
+                soft_targets = torch.tensor(self._pad(pre_soft_targets, 0))
+                setattr(self, 'soft_targets', soft_targets.to(device))
 
     def __len__(self):
         return self.batch_size
@@ -88,8 +88,9 @@ def load_dataset(args, corpus_type, shuffle):
         return dataset
 
     # Sort the glob output by file name (by increasing indexes).
-    if (args.mode != 'train'):
-        args.bert_data_path = '../bert_data/bert_data_cnndm_final/cnndm'
+    # if (args.use_soft_targets) and (args.mode == 'train'):
+    #     path_front, data_type = os.path.split(args.bert_data_path)[0], os.path.split(args.bert_data_path)[1]
+    #     args.bert_data_path = os.path.join(path_front, 'soft_targets', data_type)
     pts = sorted(glob.glob(args.bert_data_path + '.' + corpus_type + '.[0-9]*.pt'))
     if pts:
         if (shuffle):
@@ -203,18 +204,12 @@ class DataIterator(object):
         src = ex['src']
         tgt = ex['tgt'][:self.args.max_tgt_len][:-1]+[2]
 
-        if (self.args.is_student == True):
-            if (self.args.mode != 'train'):
-                src_sent_labels = ex['src_sent_labels']
-            elif (self.args.mode == 'train'):
-                src_sent_labels = ex['soft_labels']
-                # Add hard targets
-                hard_targets = ex['labels']
-
+        if (self.args.use_soft_targets) and (self.args.mode == 'train'):
+            soft_targets = ex['soft_labels']
+            src_sent_labels = ex['labels']
         else:
-            src_sent_labels = ex['src_sent_labels']
-            #src_sent_labels = ex['labels']
-        
+            src_sent_labels = ex['src_sent_labels']        
+
         segs = ex['segs']
         if(not self.args.use_interval):
             segs=[0]*len(segs)
@@ -226,20 +221,16 @@ class DataIterator(object):
         src = src[:-1][:self.args.max_pos - 1] + end_id
         segs = segs[:self.args.max_pos]
         max_sent_id = bisect.bisect_left(clss, self.args.max_pos)
-        src_sent_labels = src_sent_labels[:max_sent_id]
-        # Add hard targets
-        if (self.args.mode == 'train'):
-            hard_targets = hard_targets[:max_sent_id]
+        src_sent_labels = src_sent_labels[:max_sent_id]         
 
         clss = clss[:max_sent_id]
-        # src_txt = src_txt[:max_sent_id]
-
-
 
         if(is_test):
             return src, tgt, segs, clss, src_sent_labels, src_txt, tgt_txt
-        elif (self.args.mode == 'train'):
-            return src, tgt, segs, clss, src_sent_labels, hard_targets
+        elif (self.args.use_soft_targets) and (self.args.mode == 'train'):
+            # Add soft targets
+            soft_targets = soft_targets[:max_sent_id]
+            return src, tgt, segs, clss, src_sent_labels, soft_targets
         else:
             return src, tgt, segs, clss, src_sent_labels
 

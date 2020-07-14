@@ -175,14 +175,14 @@ class ExtSummarizer(nn.Module):
         top_vec = self.bert(src, segs, mask_src)
         # B x #S x H
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
-        print(sents_vec.size())
-        print(mask_cls[:, :, None])
-        print('before:', sents_vec.size())
+        # print(sents_vec.size())
+        # print(mask_cls[:, :, None])
+        # print('before:', sents_vec.size())
         sents_vec = sents_vec * mask_cls[:, :, None].float()
-        print('after:', sents_vec.size())
-        print(mask_src.size())
+        # print('after:', sents_vec.size())
+        # print(mask_src.size())
         
-        exit()
+        # exit()
 
         # B
         sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)

@@ -1,0 +1,9 @@
+python train.py \
+-exp_name soft+hard/bert_emb/no_alpha/bert_transformer6_accum5 \
+-ext_layers 6 \
+-mode test \
+-visible_gpus 0 \
+-gpu_ranks 0 \
+-batch_size 30000 \
+-test_from ../models/soft+hard/bert_emb/no_alpha/bert_transformer6_accum5/model_step_49000.pt \
+-block_trigram true \

@@ -27,48 +27,86 @@ def str2bool(v):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-exp_name", default='soft+hard/bert_emb/no_alpha/', type=str)
-    parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
-    #parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'])
-
+    parser.add_argument("-exp_name", type=str, default='soft+hard/bert_emb/no_alpha/', help='set the name of experiment at each time')
     parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test', 'get_soft'])
-    parser.add_argument("-distill_loss", type=str2bool, nargs='?',const=True, default=True)
-    #parser.add_argument("-distill_alpha", default=0.6, type=float)
-    parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=True)
-
-    #parser.add_argument("-bert_data_path", default='../bert_data/bert_data_cnndm_final/cnndm')
-    parser.add_argument("-bert_data_path", default='../bert_data/bert_data_cnndm_final/soft_targets/cnndm')
-
-    parser.add_argument("-model_path", default='../models/')
-    parser.add_argument("-result_path", default='../results/cnndm')
-    parser.add_argument("-temp_dir", default='../temp')
-
+    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=True)
+    # batch_size: max number of words when training
     parser.add_argument("-batch_size", default=3000, type=int)
     parser.add_argument("-test_batch_size", default=1, type=int)
-
     parser.add_argument("-max_pos", default=512, type=int)
-    parser.add_argument("-use_interval", type=str2bool, nargs='?',const=True,default=True)
     parser.add_argument("-large", type=str2bool, nargs='?',const=True,default=False)
+    parser.add_argument("-block_trigram", type=str2bool, nargs='?', const=True, default=True)
+    parser.add_argument("-ngram_blocking", default=4, type=int)
+    parser.add_argument("-label_smoothing", default=0.1, type=float) 
 
 
-    parser.add_argument("-sep_optim", type=str2bool, nargs='?',const=True,default=False)
-    parser.add_argument("-lr_bert", default=2e-3, type=float)
+    ############ params for PATHs ############
+    parser.add_argument("-bert_data_path", default='../bert_data/bert_data_cnndm/cnndm')
+    # parser.add_argument("-bert_data_path", default='../bert_data/bert_data_xsum/xsum')
+    ##### uncomment the line below to extract soft labels
+    # parser.add_argument("-test_from", default='/data/PreSumm/src/MODEL_PATH/trained_cnndm_ext/model_step_18000.pt')
+    parser.add_argument("-test_from", default='')
+    parser.add_argument("-test_start_from", default=-1, type=int)
+    parser.add_argument("-train_from", default='')
+    ############ params for PATHs ############
 
-    parser.add_argument("-use_bert_emb", type=str2bool, nargs='?',const=True,default=False)
 
-    parser.add_argument("-share_emb", type=str2bool, nargs='?', const=True, default=False)
-    parser.add_argument("-finetune_bert", type=str2bool, nargs='?', const=True, default=True)
-
-
-    # params for EXT
-    #parser.add_argument("-ext_dropout", default=0.1, type=float)
+    ############ params for the extractive summarization task ############
     parser.add_argument("-ext_dropout", default=0.1, type=float)
     parser.add_argument("-ext_layers", default=6, type=int)
     parser.add_argument("-ext_hidden_size", default=768, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)
+    #parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'], help='use pretrained BERT or not')
+    ############ params for the extractive summarization task ############
 
-    parser.add_argument("-label_smoothing", default=0.1, type=float)
+
+    ############ params for knowledge distillation ############
+    parser.add_argument("-use_soft_targets", type=str2bool, nargs='?',const=True, default=True, help='use both hard target and soft target as objective')
+    #parser.add_argument("-distill_alpha", default=0.6, type=float, help='the hyperparameter for adjusting the ratio between the hard and soft loss')
+    parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=True, help='to use the student model')
+    ############ params for knowledge distillation ############
+
+
+    ########## 這區的參數不用調 ##########
+    parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
+    parser.add_argument("-model_path", default='../models/')
+    parser.add_argument("-result_path", default='../results/cnndm')
+    parser.add_argument("-temp_dir", default='../temp')
+    parser.add_argument("-use_interval", type=str2bool, nargs='?',const=True,default=True)
+    parser.add_argument("-use_bert_emb", type=str2bool, nargs='?',const=True,default=False)
+    parser.add_argument("-share_emb", type=str2bool, nargs='?', const=True, default=False)
+    parser.add_argument("-finetune_bert", type=str2bool, nargs='?', const=True, default=True)
+    parser.add_argument('-visible_gpus', default='0', type=str)
+    parser.add_argument('-gpu_ranks', default='0', type=str)
+    parser.add_argument('-log_file', default='../logs/cnndm.log')
+    parser.add_argument('-seed', default=666, type=int)
+    ##### params for reporter
+    parser.add_argument("-save_checkpoint_steps", default=1000, type=int)
+    parser.add_argument("-accum_count", default=1, type=int)
+    parser.add_argument("-report_every", default=50, type=int)
+    parser.add_argument("-train_steps", default=50000, type=int)
+    parser.add_argument("-recall_eval", type=str2bool, nargs='?',const=True,default=False)
+    parser.add_argument("-report_rouge", type=str2bool, nargs='?',const=True,default=True)
+    ########## 這區的參數不用調 ##########
+
+
+    ########## params for optimization ##########
+    parser.add_argument("-sep_optim", type=str2bool, nargs='?',const=True,default=False)
+    parser.add_argument("-lr_bert", default=2e-3, type=float)
+    parser.add_argument("-lr", default=0.002, type=float)
+    parser.add_argument("-param_init", default=0, type=float)
+    parser.add_argument("-param_init_glorot", type=str2bool, nargs='?',const=True,default=True)
+    parser.add_argument("-optim", default='adam', type=str)
+    parser.add_argument("-beta1", default= 0.9, type=float)
+    parser.add_argument("-beta2", default=0.999, type=float)
+    parser.add_argument("-warmup_steps", default=10000, type=int)
+    parser.add_argument("-warmup_steps_bert", default=8000, type=int)
+    parser.add_argument("-warmup_steps_dec", default=8000, type=int)
+    parser.add_argument("-max_grad_norm", default=0, type=float)
+    ########## params for optimization ##########
+
+
     parser.add_argument("-generator_shard_size", default=32, type=int)
     parser.add_argument("-alpha",  default=0.6, type=float)
     parser.add_argument("-beam_size", default=5, type=int)
@@ -76,41 +114,7 @@ if __name__ == '__main__':
     parser.add_argument("-max_length", default=150, type=int)
     parser.add_argument("-max_tgt_len", default=140, type=int)
 
-
-
-    parser.add_argument("-param_init", default=0, type=float)
-    parser.add_argument("-param_init_glorot", type=str2bool, nargs='?',const=True,default=True)
-    parser.add_argument("-optim", default='adam', type=str)
-    parser.add_argument("-lr", default=0.002, type=float)
-    parser.add_argument("-beta1", default= 0.9, type=float)
-    parser.add_argument("-beta2", default=0.999, type=float)
-    parser.add_argument("-warmup_steps", default=10000, type=int)
-    parser.add_argument("-warmup_steps_bert", default=8000, type=int)
-    parser.add_argument("-warmup_steps_dec", default=8000, type=int)
-    parser.add_argument("-max_grad_norm", default=0, type=float)
-
-    parser.add_argument("-save_checkpoint_steps", default=1000, type=int)
-    parser.add_argument("-accum_count", default=1, type=int)
-    parser.add_argument("-report_every", default=50, type=int)
-    parser.add_argument("-train_steps", default=50000, type=int)
-    parser.add_argument("-recall_eval", type=str2bool, nargs='?',const=True,default=False)
-
-
-    parser.add_argument('-visible_gpus', default='0', type=str)
-    parser.add_argument('-gpu_ranks', default='0', type=str)
-    parser.add_argument('-log_file', default='../logs/cnndm.log')
-    parser.add_argument('-seed', default=666, type=int)
-
-    parser.add_argument("-test_all", type=str2bool, nargs='?',const=True,default=True)
-
-    # uncomment the line below to extract soft labels
-    #parser.add_argument("-test_from", default='/data/PreSumm/src/MODEL_PATH/trained_cnndm_ext/model_step_18000.pt')
-    parser.add_argument("-test_from", default='')
-    parser.add_argument("-test_start_from", default=-1, type=int)
-
-    parser.add_argument("-train_from", default='')
-    parser.add_argument("-report_rouge", type=str2bool, nargs='?',const=True,default=True)
-    parser.add_argument("-block_trigram", type=str2bool, nargs='?', const=True, default=True)
+    
 
     args = parser.parse_args()
     args.gpu_ranks = [int(i) for i in range(len(args.visible_gpus.split(',')))]
@@ -156,6 +160,9 @@ if __name__ == '__main__':
                 os.makedirs(model_save_path)
             with open(os.path.join(model_save_path, 'command_args.txt'), 'w') as f:
                 json.dump(args.__dict__, f, indent=2)
+            if (args.use_soft_targets):
+                args.bert_data_path = os.path.join(os.path.split(args.bert_data_path)[0], 'soft_targets',
+                                                    os.path.split(args.bert_data_path)[1])
             train_ext(args, device_id)
         elif (args.mode == 'validate'):
             validate_ext(args, device_id)

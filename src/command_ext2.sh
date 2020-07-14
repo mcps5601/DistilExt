@@ -1,7 +1,7 @@
 python train.py \
--exp_name soft+hard/bert_emb/no_alpha/bert_transformer5_linear1024 \
--ext_layers 5 \
--ext_ff_size 1024 \
+-exp_name soft+hard/bert_emb/no_alpha/bert_transformer3 \
+-ext_layers 3 \
+-task ext \
 -mode train \
 -ext_dropout 0.1 \
 -lr 0.002 \
@@ -14,3 +14,4 @@ python train.py \
 -use_interval true \
 -warmup_steps 10000 \
 -max_pos 512 \
+-ext_hidden_size 768 \

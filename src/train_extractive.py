@@ -163,7 +163,7 @@ def validate(args, device_id, pt, step):
             setattr(args, k, opt[k])
     print(args)
 
-    if (args.is_student == True):
+    if (args.is_student):
         model = StudentModel(args, device, checkpoint)
     else:
         model = ExtSummarizer(args, device, checkpoint)
@@ -190,7 +190,7 @@ def test_ext(args, device_id, pt, step):
         if (k in model_flags):
             setattr(args, k, opt[k])
     print(args)
-    if (args.is_student == True):
+    if (args.is_student):
         model = StudentModel(args, device, checkpoint)
     else:
         model = ExtSummarizer(args, device, checkpoint)
@@ -242,7 +242,7 @@ def train_single_ext(args, device_id):
     def train_iter_fct():
         return data_loader.Dataloader(args, load_dataset(args, 'train', shuffle=True), args.batch_size, device,
                                       shuffle=True, is_test=False)
-    if (args.is_student == True):
+    if (args.is_student):
         model = StudentModel(args, device, checkpoint)
     else:
         model = ExtSummarizer(args, device, checkpoint)
@@ -296,7 +296,7 @@ def extract_soft(args, device_id, pt, step):
     model.eval()
 
     # assert corpus_type in ["train", "valid", "test"]
-    pts = sorted(glob.glob(args.bert_data_path + '.' + 'train' + '.[0-9]*.pt'))
+    pts = sorted(glob.glob(args.bert_data_path + '.' + 'test' + '.[0-9]*.pt'))
     for pt_file in pts:
         test_iter = data_loader.Dataloader(args, load_dataset_for_soft(pt_file),
                                        args.test_batch_size, device,
