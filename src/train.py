@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_argument("-max_pos", default=512, type=int)
     parser.add_argument("-large", type=str2bool, nargs='?',const=True,default=False)
     parser.add_argument("-block_trigram", type=str2bool, nargs='?', const=True, default=True)
-    parser.add_argument("-ngram_blocking", default=4, type=int)
+    parser.add_argument("-ngram_blocking", default=3, type=int)
     parser.add_argument("-label_smoothing", default=0.1, type=float) 
 
 
@@ -48,6 +48,8 @@ if __name__ == '__main__':
     parser.add_argument("-test_from", default='')
     parser.add_argument("-test_start_from", default=-1, type=int)
     parser.add_argument("-train_from", default='')
+    parser.add_argument("-soft_targets_folder", default='', help='set the folder name of dumped soft targets')
+    parser.add_argument("-dump_mode", type=str, default='', choices=['train', 'valid', 'test'])
     ############ params for PATHs ############
 
 
@@ -181,6 +183,9 @@ if __name__ == '__main__':
                 step = 0
                 test_text_abs(args, device_id, cp, step)
         elif (args.mode == 'get_soft'):
+            soft_save_path = os.path.join(os.path.split(args.bert_data_path)[0], args.soft_targets_folder)
+            if not os.path.exists(soft_save_path):
+                os.makedirs(soft_save_path)
             cp = args.test_from
             try:
                 step = int(cp.split('.')[-2].split('_')[-1])

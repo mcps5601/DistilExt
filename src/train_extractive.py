@@ -296,7 +296,7 @@ def extract_soft(args, device_id, pt, step):
     model.eval()
 
     # assert corpus_type in ["train", "valid", "test"]
-    pts = sorted(glob.glob(args.bert_data_path + '.' + 'test' + '.[0-9]*.pt'))
+    pts = sorted(glob.glob(args.bert_data_path + '.' + args.dump_mode + '.[0-9]*.pt'))
     for pt_file in pts:
         test_iter = data_loader.Dataloader(args, load_dataset_for_soft(pt_file),
                                        args.test_batch_size, device,

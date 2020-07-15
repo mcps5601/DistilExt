@@ -1,6 +1,6 @@
 python train.py \
--exp_name soft+hard/bert_emb/no_alpha/bert_transformer5_linear1024 \
--ext_layers 5 \
+-exp_name soft+hard/bert_emb/no_alpha/bert_transformer6_linear1024_accum2 \
+-ext_layers 6 \
 -ext_ff_size 1024 \
 -mode validate \
 -visible_gpus 0 \

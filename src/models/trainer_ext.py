@@ -341,8 +341,8 @@ class Trainer(object):
                                 'src_txt': batch.src_str, "tgt_txt": batch.tgt_str}
                 datasets_soft.append(b_data_dict)
 
-            logger.info('Saving to %s' % os.path.join(os.path.split(filename)[0], 'soft_targets', os.path.split(filename)[-1]))
-            torch.save(datasets_soft, os.path.join(os.path.split(filename)[0], 'soft_targets', os.path.split(filename)[-1]))
+            logger.info('Saving to %s' % os.path.join(os.path.split(filename)[0], self.args.soft_targets_folder, os.path.split(filename)[-1]))
+            torch.save(datasets_soft, os.path.join(os.path.split(filename)[0], self.args.soft_targets_folder, os.path.split(filename)[-1]))
             datasets_soft = []
             gc.collect()
 
