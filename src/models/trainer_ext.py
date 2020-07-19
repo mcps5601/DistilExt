@@ -291,7 +291,7 @@ class Trainer(object):
                                 else:
                                     _pred.append(candidate)
 
-                                if ((not cal_oracle) and (not self.args.recall_eval) and len(_pred) == 3):
+                                if ((not cal_oracle) and (not self.args.recall_eval) and len(_pred) == self.args.ext_sent_num):
                                     break
 
                             _pred = '<q>'.join(_pred)

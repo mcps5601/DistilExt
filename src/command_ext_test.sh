@@ -1,10 +1,11 @@
 python train.py \
--exp_name soft+hard/bert_emb/no_alpha/bert_transformer5_linear1024 \
+-exp_name hard/xsum_test/bert_ext_distill \
+-ext_layers 6 \
 -ext_ff_size 1024 \
--ext_layers 5 \
 -mode test \
--visible_gpus 0 \
+-visible_gpus 1 \
 -gpu_ranks 0 \
 -batch_size 30000 \
--test_from ../models/soft+hard/bert_emb/no_alpha/bert_transformer5_linear1024/model_step_47000.pt \
 -block_trigram true \
+-test_from /data/distill_ext/PreSumm/models/soft+hard/bert_emb/no_alpha/bert_transformer6_linear1024_accum5/model_step_49000.pt \
+-is_student true \

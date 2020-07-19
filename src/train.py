@@ -41,8 +41,8 @@ if __name__ == '__main__':
 
 
     ############ params for PATHs ############
-    parser.add_argument("-bert_data_path", default='../bert_data/bert_data_cnndm/cnndm')
-    # parser.add_argument("-bert_data_path", default='../bert_data/bert_data_xsum/xsum')
+    #parser.add_argument("-bert_data_path", default='../bert_data/bert_data_cnndm/cnndm')
+    parser.add_argument("-bert_data_path", default='../bert_data/bert_data_xsum/xsum')
     ##### uncomment the line below to extract soft labels
     # parser.add_argument("-test_from", default='/data/PreSumm/src/MODEL_PATH/trained_cnndm_ext/model_step_18000.pt')
     parser.add_argument("-test_from", default='')
@@ -54,19 +54,20 @@ if __name__ == '__main__':
 
 
     ############ params for the extractive summarization task ############
+    parser.add_argument("-ext_sent_num", default=3, type=int)
     parser.add_argument("-ext_dropout", default=0.1, type=float)
     parser.add_argument("-ext_layers", default=6, type=int)
     parser.add_argument("-ext_hidden_size", default=768, type=int)
     parser.add_argument("-ext_heads", default=8, type=int)
     parser.add_argument("-ext_ff_size", default=2048, type=int)
-    #parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'], help='use pretrained BERT or not')
+    parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'], help='use pretrained BERT or not')
     ############ params for the extractive summarization task ############
 
 
     ############ params for knowledge distillation ############
-    parser.add_argument("-use_soft_targets", type=str2bool, nargs='?',const=True, default=True, help='use both hard target and soft target as objective')
+    parser.add_argument("-use_soft_targets", type=str2bool, nargs='?',const=True, default=False, help='use both hard target and soft target as objective')
     #parser.add_argument("-distill_alpha", default=0.6, type=float, help='the hyperparameter for adjusting the ratio between the hard and soft loss')
-    parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=True, help='to use the student model')
+    parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=False, help='to use the student model')
     ############ params for knowledge distillation ############
 
 

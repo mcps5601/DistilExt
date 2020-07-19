@@ -1,11 +1,11 @@
 python train.py \
--exp_name soft+hard/bert_emb/no_alpha/bert_transformer6_linear1024_accum3 \
--ext_layers 6 \
--ext_ff_size 1024 \
+-exp_name soft+hard/xsum/bert_ext \
+-ext_layers 2 \
+-ext_ff_size 2048 \
 -mode train \
 -ext_dropout 0.1 \
 -lr 0.002 \
--visible_gpus 1 \
+-visible_gpus 0 \
 -report_every 50 \
 -save_checkpoint_steps 1000 \
 -batch_size 3000 \
