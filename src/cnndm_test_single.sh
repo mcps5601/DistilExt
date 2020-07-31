@@ -1,0 +1,15 @@
+python train.py \
+-ngram_blocking 3 \
+-ext_sent_num 3 \
+-exp_name soft+hard/cnndm/transformer8_linear1024_accum5/test \
+-ext_layers 8 \
+-ext_hidden_size 768 \
+-ext_ff_size 1024 \
+-mode test \
+-test_from ../models/soft+hard/cnndm/bert_transformer11_hidden512_accum5/model_step_50000.pt \
+-visible_gpus 0 \
+-test_batch_size 30000 \
+-use_interval true \
+-max_pos 512 \
+-bert_data_path ../bert_data/bert_data_cnndm/cnndm \
+-is_student true \

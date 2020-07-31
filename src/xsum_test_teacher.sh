@@ -1,0 +1,12 @@
+python train.py \
+-exp_name hard/xsum/bert_ext_accum5 \
+-ext_layers 2 \
+-ext_ff_size 2048 \
+-mode test \
+-visible_gpus 0 \
+-gpu_ranks 0 \
+-ext_sent_num 2 \
+-block_trigram true \
+-ngram_blocking 3 \
+-test_from ../models/hard/xsum/bert_ext_accum5/model_step_11000.pt
+-is_student false \

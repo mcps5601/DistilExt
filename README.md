@@ -39,18 +39,19 @@ We provide our pre-processed data here.
 ## Model Training
 
 **First run: For the first time, you should use single-GPU, so the code can download the BERT model. Use ``-visible_gpus -1``, after downloading, you could kill the process and rerun the code with multi-GPUs.**
+**The scripts below are in the folder src.**
 
-#### CNN/DM
-##### To train a student
+### CNN/DM
+#### To train a student
 ```
 bash cnndm_train.sh
 ```
-#### XSum
-##### To train a teacher
+### XSum
+#### To train a teacher
 ```
 bash xsum_train.sh
 ```
-##### To train a student
+#### To train a student
 ```
 bash xsum_train_stu.sh
 ```
@@ -67,7 +68,21 @@ bash cnndm_val.sh
 bash xsum_val.sh
 ```
 
+## Testing for a single step
+### CNN/DM
+```
+bash cnndm_test_single.sh
+```
+### XSum
+```
+# test teacher
+bash xsum_test_teacher.sh
+```
+```
+# test student
+bash xsum_test_single.sh
+```
+
 * `-mode` can be {`validate, test`}, where `validate` will inspect the model directory and evaluate the model for each newly saved checkpoint, `test` need to be used with `-test_from`, indicating the checkpoint you want to use
 * `MODEL_PATH` is the directory of saved checkpoints
 * use `-mode valiadte` with `-test_all`, the system will load all saved checkpoints and select the top ones to generate summaries (this will take a while)
-
