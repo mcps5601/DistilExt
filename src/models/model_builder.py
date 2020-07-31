@@ -195,20 +195,25 @@ class StudentModel(nn.Module):
         super(StudentModel, self).__init__()
         self.args = args
         self.device = device
-        self.embedding = embedding_distill(self.args)
+        self.bert = Bert(args.large, args.temp_dir, args.finetune_bert)
+        bert_config = BertConfig(self.bert.model.config.vocab_size, hidden_size=args.ext_hidden_size,
+                                    num_hidden_layers=args.transformer_layers, num_attention_heads=args.ext_heads, intermediate_size=args.ext_ff_size)
+        self.bert.model = BertModel(bert_config)
+
 
         # 30522: vocab_size of BertTokenizer
         # self.embedding = nn.Embedding(30522, args.ext_hidden_size)
         self.transformer = ExtTransformerEncoder(
-                self.args.ext_hidden_size, 
-                self.args.ext_ff_size, 
+                #self.args.ext_hidden_size,
+                self.bert.model.config.hidden_size,
+                self.args.ext_ff_size,
                 self.args.ext_heads,
-                self.args.ext_dropout, 
+                self.args.ext_dropout,
                 self.args.ext_layers
             )
         if checkpoint is not None:
             self.load_state_dict(checkpoint['model'], strict=True)
-        else:              
+        else:
             if args.param_init != 0.0:
                 for p in self.transformer.parameters():
                     p.data.uniform_(-args.param_init, args.param_init)
@@ -221,7 +226,7 @@ class StudentModel(nn.Module):
 
     def forward(self, src, segs, clss, mask_src, mask_cls):
         # B x S x H
-        top_vec = self.embedding(src, segs)
+        top_vec = self.bert(src, segs, mask_src)
         '''
         B, S = mask_src.size(0), mask_src.size(1)
         temp_mask_cls = torch.zeros(B, S)
@@ -230,14 +235,14 @@ class StudentModel(nn.Module):
         mask = mask_src.bool() | mask_cls
         '''
         # mask_src
-        _, top_vec = self.transformer(top_vec, mask_src)
+        #_, top_vec = self.transformer(top_vec, mask_src)
 
         # B x #S x H
         sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
         sents_vec = sents_vec * mask_cls[:, :, None].float()
         
         # B
-        sent_scores = self.transformer(sents_vec, mask_cls)[0].squeeze(-1)
+        sent_scores = self.transformer(sents_vec, mask_cls).squeeze(-1)
         return sent_scores, mask_cls
 
 

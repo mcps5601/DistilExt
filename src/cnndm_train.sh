@@ -1,14 +1,15 @@
 python train.py \
--exp_name soft+hard/bert_emb/no_alpha/bert_transformer5_linear1024_accum5 \
--ext_layers 5 \
+-exp_name soft+hard/cnndm/transformer8_linear1024_accum5 \
+-ext_layers 8 \
+-ext_hidden_size 768 \
 -ext_ff_size 1024 \
 -mode train \
 -ext_dropout 0.1 \
 -lr 0.002 \
--visible_gpus 1 \
+-visible_gpus 0 \
 -report_every 50 \
 -save_checkpoint_steps 1000 \
--batch_size 1000 \
+-batch_size 3000 \
 -train_steps 50000 \
 -accum_count 5 \
 -use_interval true \
@@ -17,4 +18,3 @@ python train.py \
 -bert_data_path ../bert_data/bert_data_cnndm/cnndm \
 -use_soft_targets true \
 -is_student true \
-

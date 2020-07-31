@@ -6,3 +6,4 @@ logs/*
 raw_data/*
 results/*
 src/models/backup
+src/sh.backup

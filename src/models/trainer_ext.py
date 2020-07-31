@@ -371,7 +371,7 @@ class Trainer(object):
             if (self.args.use_soft_targets):
                 soft_labels = batch.soft_targets
                 #loss = self.loss(sent_scores, labels.float()) * self.args.distill_alpha + self.loss(sent_scores, soft_labels.float()) * (1 - self.args.distill_alpha)
-                loss = self.loss(sent_scores, labels.float()) + self.loss(sent_scores, soft_labels.float())
+                loss = self.loss(sent_scores, labels.float()) + self.args.distill_alpha * self.loss(sent_scores, soft_labels.float())
             else:
                 loss = self.loss(sent_scores, labels.float())
             loss = (loss * mask.float()).sum()

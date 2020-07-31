@@ -45,33 +45,35 @@ if __name__ == '__main__':
     parser.add_argument("-bert_data_path", default='../bert_data/bert_data_xsum/xsum')
     ##### uncomment the line below to extract soft labels
     # parser.add_argument("-test_from", default='/data/PreSumm/src/MODEL_PATH/trained_cnndm_ext/model_step_18000.pt')
-    parser.add_argument("-test_from", default='')
+    parser.add_argument("-test_from", default='', help='test a specific model step')
     parser.add_argument("-test_start_from", default=-1, type=int)
-    parser.add_argument("-train_from", default='')
+    parser.add_argument("-train_from", default='', help='load the model step for keep training')
     parser.add_argument("-soft_targets_folder", default='', help='set the folder name of dumped soft targets')
     parser.add_argument("-dump_mode", type=str, default='', choices=['train', 'valid', 'test'])
     ############ params for PATHs ############
 
 
     ############ params for the extractive summarization task ############
-    parser.add_argument("-ext_sent_num", default=3, type=int)
-    parser.add_argument("-ext_dropout", default=0.1, type=float)
-    parser.add_argument("-ext_layers", default=6, type=int)
-    parser.add_argument("-ext_hidden_size", default=768, type=int)
-    parser.add_argument("-ext_heads", default=8, type=int)
-    parser.add_argument("-ext_ff_size", default=2048, type=int)
+    parser.add_argument("-ext_sent_num", default=3, type=int, help='the k of top-k prediction sentences')
+    parser.add_argument("-ext_dropout", default=0.1, type=float, help='the dropout rate')
+    parser.add_argument("-transformer_layers", default=10, type=int, help='encoder transformer layers of the student model v1')
+    parser.add_argument("-ext_layers", default=2, type=int, help='classification layers of BERTSUM/ student model v1 or the transformer layers of the student model v2')
+    parser.add_argument("-ext_hidden_size", default=768, type=int, help='hidden size of Transformer')
+    parser.add_argument("-ext_heads", default=8, type=int, help='number of heads for multi-head attention')
+    parser.add_argument("-ext_ff_size", default=2048, type=int, help='feed-foward size of Transformer')
     parser.add_argument("-encoder", default='bert', type=str, choices=['bert', 'baseline'], help='use pretrained BERT or not')
     ############ params for the extractive summarization task ############
 
 
     ############ params for knowledge distillation ############
     parser.add_argument("-use_soft_targets", type=str2bool, nargs='?',const=True, default=False, help='use both hard target and soft target as objective')
-    #parser.add_argument("-distill_alpha", default=0.6, type=float, help='the hyperparameter for adjusting the ratio between the hard and soft loss')
     parser.add_argument("-is_student", type=str2bool, nargs='?',const=True, default=False, help='to use the student model')
+    parser.add_argument("-use_stacked", type=str2bool, nargs='?',const=True, default=True, help='use the student model v2')
+    parser.add_argument("-distill_alpha", default=1, type=float, help='the hyperparameter for adjusting the ratio of the soft target loss')
     ############ params for knowledge distillation ############
 
 
-    ########## 這區的參數不用調 ##########
+    ########## basically no need to adjust the params here ##########
     parser.add_argument("-task", default='ext', type=str, choices=['ext', 'abs'])
     parser.add_argument("-model_path", default='../models/')
     parser.add_argument("-result_path", default='../results/cnndm')

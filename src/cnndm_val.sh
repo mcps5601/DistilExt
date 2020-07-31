@@ -1,0 +1,13 @@
+python train.py \
+-exp_name soft+hard/cnndm/transformer8_linear1024_accum5 \
+-ext_sent_num 3 \
+-ext_layers 8 \
+-ext_hidden_size 768 \
+-ext_ff_size 1024 \
+-mode validate \
+-test_all \
+-visible_gpus 0 \
+-use_interval true \
+-max_pos 512 \
+-is_student true \
+-bert_data_path ../bert_data/bert_data_cnndm/cnndm

@@ -17,7 +17,8 @@ import distributed
 from models import data_loader, model_builder
 from models.data_loader import load_dataset
 from models.model_builder import ExtSummarizer
-from models.model_builder import StudentModelv2 as StudentModel
+#from models.model_builder import StudentModelv2 as StudentModel
+from models.model_builder import StudentModel, StudentModelv2
 from models.trainer_ext import build_trainer
 from others.logging import logger, init_logger
 
@@ -164,7 +165,10 @@ def validate(args, device_id, pt, step):
     print(args)
 
     if (args.is_student):
-        model = StudentModel(args, device, checkpoint)
+        if (args.use_stacked):
+            model = StudentModelv2(args, device, checkpoint)
+        else:
+            model = StudentModel(args, device, checkpoint)
     else:
         model = ExtSummarizer(args, device, checkpoint)
     model.eval()
@@ -191,7 +195,10 @@ def test_ext(args, device_id, pt, step):
             setattr(args, k, opt[k])
     print(args)
     if (args.is_student):
-        model = StudentModel(args, device, checkpoint)
+        if (args.use_stacked):
+            model = StudentModelv2(args, device, checkpoint)
+        else:
+            model = StudentModel(args, device, checkpoint)
     else:
         model = ExtSummarizer(args, device, checkpoint)
     model.eval()
@@ -200,7 +207,10 @@ def test_ext(args, device_id, pt, step):
                                        args.test_batch_size, device,
                                        shuffle=False, is_test=True)
     trainer = build_trainer(args, device_id, model, None)
+    start = time.time()
     trainer.test(test_iter, step)
+    end = time.time()
+    print("Time elapsed: {} sec".format(end - start))
 
 def train_ext(args, device_id):
     if (args.world_size > 1):
