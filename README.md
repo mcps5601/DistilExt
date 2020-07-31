@@ -20,7 +20,7 @@ Some codes are borrowed from ONMT(https://github.com/OpenNMT/OpenNMT-py)
 
 
 ## Data Preparation 
-For the steps of data preprocessing, please visit [PreSumm](https://github.com/nlpyang/PreSumm) for more information.
+For the steps of data preprocessing, please visit [PreSumm](https://github.com/nlpyang/PreSumm) for more information. \
 We provide our pre-processed data here.
 
 ### CNN/DailyMail
