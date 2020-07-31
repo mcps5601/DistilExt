@@ -19,63 +19,21 @@ Some codes are borrowed from ONMT(https://github.com/OpenNMT/OpenNMT-py)
 [XSum DistilExt (6-layer Transformer)](https://drive.google.com/file/d/1vU8HQeOyd8BXDvvUXaGzWQuX0HSBsQTk/view?usp=sharing)
 
 
-## Data Preparation For CNN/DM
-[Pre-processed data](https://drive.google.com/file/d/1b9CpjMM_qFZMxJS8rgpNSYTwv2tm6smc/view?usp=sharing)
+## Data Preparation 
+For the steps of data preprocessing, please visit [PreSumm](https://github.com/nlpyang/PreSumm) for more information.
+We provide our pre-processed data here.
 
-## Data Preparation For CNN/DM (soft_targets)
-[Pre-processed data](https://drive.google.com/file/d/1hA3QiJj3YNzGS9Bp3dAQaAs7zKAS9AY0/view?usp=sharing)
+### CNN/DailyMail
+[CNN/DM](https://drive.google.com/file/d/1b9CpjMM_qFZMxJS8rgpNSYTwv2tm6smc/view?usp=sharing)
 
-## Data Preparation For XSum
-[Pre-processed data](https://drive.google.com/file/d/1sVQEDfkl0VzjInXgF9DhWGZWNzjnu05c/view?usp=sharing)
+[CNN/DM (soft_targets)](https://drive.google.com/file/d/1hA3QiJj3YNzGS9Bp3dAQaAs7zKAS9AY0/view?usp=sharing)
 
-## Data Preparation For XSum (soft_targets)
-[Pre-processed data](https://drive.google.com/file/d/1rzjs0dUK2YXu3SnfUnjt-AHeHsVxynZR/view?usp=sharing)
+### XSum
+[XSum](https://drive.google.com/file/d/1sVQEDfkl0VzjInXgF9DhWGZWNzjnu05c/view?usp=sharing)
 
-
-
-
-## Data Preparation For CNN/Dailymail
-### Option 1: download the processed data
-
-[Pre-processed data](https://drive.google.com/open?id=1DN7ClZCCXsk2KegmC6t4ClBwtAf5galI)
-
-unzip the zipfile and put all `.pt` files into `bert_data`
-
-### Option 2: process the data yourself
-
-#### Step 1 Download Stories
-Download and unzip the `stories` directories from [here](http://cs.nyu.edu/~kcho/DMQA/) for both CNN and Daily Mail. Put all  `.story` files in one directory (e.g. `../raw_stories`)
-
-####  Step 2. Download Stanford CoreNLP
-We will need Stanford CoreNLP to tokenize the data. Download it [here](https://stanfordnlp.github.io/CoreNLP/) and unzip it. Then add the following command to your bash_profile:
-```
-export CLASSPATH=/path/to/stanford-corenlp-full-2017-06-09/stanford-corenlp-3.8.0.jar
-```
-replacing `/path/to/` with the path to where you saved the `stanford-corenlp-full-2017-06-09` directory. 
-
-####  Step 3. Sentence Splitting and Tokenization
-
-```
-python preprocess.py -mode tokenize -raw_path RAW_PATH -save_path TOKENIZED_PATH
-```
-
-* `RAW_PATH` is the directory containing story files (`../raw_stories`), `JSON_PATH` is the target directory to save the generated json files (`../merged_stories_tokenized`)
+[XSum (soft_targets)](https://drive.google.com/file/d/1rzjs0dUK2YXu3SnfUnjt-AHeHsVxynZR/view?usp=sharing)
 
 
-####  Step 4. Format to Simpler Json Files
- 
-```
-python preprocess.py -mode format_to_lines -raw_path RAW_PATH -save_path JSON_PATH -n_cpus 1 -use_bert_basic_tokenizer false -map_path MAP_PATH
-```
-
-* `RAW_PATH` is the directory containing tokenized files (`../merged_stories_tokenized`), `JSON_PATH` is the target directory to save the generated json files (`../json_data/cnndm`), `MAP_PATH` is the  directory containing the urls files (`../urls`)
-
-####  Step 5. Format to PyTorch Files
-```
-python preprocess.py -mode format_to_bert -raw_path JSON_PATH -save_path BERT_DATA_PATH  -lower -n_cpus 1 -log_file ../logs/preprocess.log
-```
-
-* `JSON_PATH` is the directory containing json files (`../json_data`), `BERT_DATA_PATH` is the target directory to save the generated binary files (`../bert_data`)
 
 ## Model Training
 
