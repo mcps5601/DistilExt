@@ -1,7 +1,7 @@
 models/*
 temp/*
 bert_data/*
-json_data/*
+json_data
 logs/*
 raw_data/*
 results/*
