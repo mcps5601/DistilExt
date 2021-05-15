@@ -6,7 +6,7 @@ logs/*
 raw_data/*
 results/*
 src/models/*
-src/*/__pycahe__
+src/models/__pycahe__
 src/models/backup
 src/sh.backup
 backup
