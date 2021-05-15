@@ -115,23 +115,36 @@ def get_generator(vocab_size, dec_hidden_size, device):
     return generator
 
 class Bert(nn.Module):
-    def __init__(self, large, temp_dir, finetune=False):
+    def __init__(self, large, temp_dir, finetune=False, output_hidden_states=False):
         super(Bert, self).__init__()
         if(large):
             self.model = BertModel.from_pretrained('bert-large-uncased', cache_dir=temp_dir)
         else:
-            self.model = BertModel.from_pretrained('bert-base-uncased', cache_dir=temp_dir)
+            if output_hidden_states:
+                self.model = BertModel.from_pretrained(
+                    'bert-base-uncased', 
+                    output_hidden_states=True,
+                    cache_dir=temp_dir
+                )
+            else:
+                self.model = BertModel.from_pretrained('bert-base-uncased', cache_dir=temp_dir)
 
         self.finetune = finetune
+        self.output_hidden_states = output_hidden_states
 
     def forward(self, x, segs, mask):
         if(self.finetune):
             top_vec, _ = self.model(x, segs, attention_mask=mask)
+            return top_vec
         else:
             self.eval()
             with torch.no_grad():
-                top_vec, _ = self.model(x, segs, attention_mask=mask)
-        return top_vec
+                if self.output_hidden_states:
+                    top_vec, _, hidden_states = self.model(x, segs, attention_mask=mask)
+                    return top_vec, hidden_states
+                else:
+                    top_vec, _ = self.model(x, segs, attention_mask=mask)
+                    return top_vec
 
 
 class ExtSummarizer(nn.Module):
@@ -139,7 +152,7 @@ class ExtSummarizer(nn.Module):
         super(ExtSummarizer, self).__init__()
         self.args = args
         self.device = device
-        self.bert = Bert(args.large, args.temp_dir, args.finetune_bert)
+        self.bert = Bert(args.large, args.temp_dir, args.finetune_bert, args.output_hiddens)
 
         self.ext_layer = ExtTransformerEncoder(self.bert.model.config.hidden_size, args.ext_ff_size, args.ext_heads,
                                                args.ext_dropout, args.ext_layers)
@@ -171,23 +184,28 @@ class ExtSummarizer(nn.Module):
 
     # clss = mask_cls =  B x #S
     def forward(self, src, segs, clss, mask_src, mask_cls):
+        if self.args.output_hiddens:
+            top_vec, hiddens = self.bert(src, segs, mask_src)
+            sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
+            sents_vec = sents_vec * mask_cls[:, :, None].float()
+            sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)
 
-        # B x S x H
-        top_vec = self.bert(src, segs, mask_src)
-        # B x #S x H
-        sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
-        # print(sents_vec.size())
-        # print(mask_cls[:, :, None])
-        # print('before:', sents_vec.size())
-        sents_vec = sents_vec * mask_cls[:, :, None].float()
-        # print('after:', sents_vec.size())
-        # print(mask_src.size())
-        
-        # exit()
+            return sent_scores, mask_cls, hiddens
+        else:
+            # B x S x H
+            top_vec = self.bert(src, segs, mask_src)
+            # B x #S x H
+            sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss]
+            # print(sents_vec.size())
+            # print(mask_cls[:, :, None])
+            # print('before:', sents_vec.size())
+            sents_vec = sents_vec * mask_cls[:, :, None].float()
+            # print('after:', sents_vec.size())
+            # print(mask_src.size())
 
-        # B
-        sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)
-        return sent_scores, mask_cls
+            # B
+            sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)
+            return sent_scores, mask_cls
 
 
 class StudentModel(nn.Module):

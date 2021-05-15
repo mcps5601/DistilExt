@@ -1,0 +1,18 @@
+python train.py \
+-exp_name get_hidden \
+-mode get_soft \
+-output_hiddens true \
+-ext_sent_num 3 \
+-ext_layers 2 \
+-ext_hidden_size 768 \
+-test_batch_size 1 \
+-ext_ff_size 2048 \
+-visible_gpus 0 \
+-use_interval true \
+-max_pos 512 \
+-is_student false \
+-dump_mode train \
+-finetune false \
+-bert_data_path ../bert_data/bert_data_cnndm/cnndm \
+-soft_targets_folder soft_with_hiddens \
+-test_from /home/dean/workspace/DistilExt/model_checkpoints/teacher/bertext_cnndm_transformer.pt

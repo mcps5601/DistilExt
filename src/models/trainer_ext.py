@@ -16,7 +16,7 @@ def _tally_parameters(model):
     return n_params
 
 
-def build_trainer(args, device_id, model, optim):
+def build_trainer(args, device_id, model, optim, teacher_model):
     """
     Simplify `Trainer` creation based on user `opt`s*
     Args:
@@ -47,7 +47,7 @@ def build_trainer(args, device_id, model, optim):
 
     report_manager = ReportMgr(args.report_every, start_time=-1, tensorboard_writer=writer)
 
-    trainer = Trainer(args, model, optim, grad_accum_count, n_gpu, gpu_rank, report_manager)
+    trainer = Trainer(args, model, optim, teacher_model, grad_accum_count, n_gpu, gpu_rank, report_manager)
 
     # print(tr)
     if (model):
@@ -82,7 +82,7 @@ class Trainer(object):
                 Thus nothing will be saved if this parameter is None
     """
 
-    def __init__(self, args, model, optim,
+    def __init__(self, args, model, optim, teacher_model,
                  grad_accum_count=1, n_gpu=1, gpu_rank=1,
                  report_manager=None):
         # Basic attributes.
@@ -90,10 +90,12 @@ class Trainer(object):
         self.save_checkpoint_steps = args.save_checkpoint_steps
         self.model = model
         self.optim = optim
+        self.teacher_model = teacher_model
         self.grad_accum_count = grad_accum_count
         self.n_gpu = n_gpu
         self.gpu_rank = gpu_rank
         self.report_manager = report_manager
+
 
         self.loss = torch.nn.BCELoss(reduction='none')
         assert grad_accum_count > 0
@@ -314,7 +316,6 @@ class Trainer(object):
 
 
 
-
     def dump_soft(self, test_iter, step, filename):
         """ Validate model.
             valid_iter: validate data iterator
@@ -334,19 +335,22 @@ class Trainer(object):
                 clss = batch.clss
                 mask = batch.mask_src
                 mask_cls = batch.mask_cls
-                        
-                sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
-                b_data_dict = {"src": src.cpu().tolist()[0], "tgt": batch.tgt.cpu().tolist()[0], "labels": labels.cpu().tolist()[0],
-                                "soft_labels": sent_scores.cpu().tolist()[0], "segs": segs.cpu().tolist()[0], 'clss': clss.cpu().tolist()[0],
-                                'src_txt': batch.src_str, "tgt_txt": batch.tgt_str}
+                if self.args.output_hiddens:
+                    sent_scores, mask, hiddens = self.model(src, segs, clss, mask, mask_cls)
+                    b_data_dict = {"src": src.cpu().tolist()[0], "tgt": batch.tgt.cpu().tolist()[0], "labels": labels.cpu().tolist()[0],
+                                    "soft_labels": sent_scores.cpu().tolist()[0], "segs": segs.cpu().tolist()[0], "clss": clss.cpu().tolist()[0],
+                                    "src_txt": batch.src_str, "tgt_txt": batch.tgt_str, "hiddens": hiddens[1:]}
+                else:
+                    sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
+                    b_data_dict = {"src": src.cpu().tolist()[0], "tgt": batch.tgt.cpu().tolist()[0], "labels": labels.cpu().tolist()[0],
+                                    "soft_labels": sent_scores.cpu().tolist()[0], "segs": segs.cpu().tolist()[0], "clss": clss.cpu().tolist()[0],
+                                    "src_txt": batch.src_str, "tgt_txt": batch.tgt_str}
                 datasets_soft.append(b_data_dict)
 
             logger.info('Saving to %s' % os.path.join(os.path.split(filename)[0], self.args.soft_targets_folder, os.path.split(filename)[-1]))
             torch.save(datasets_soft, os.path.join(os.path.split(filename)[0], self.args.soft_targets_folder, os.path.split(filename)[-1]))
             datasets_soft = []
             gc.collect()
-
-
 
 
 
@@ -365,6 +369,13 @@ class Trainer(object):
             clss = batch.clss
             mask = batch.mask_src
             mask_cls = batch.mask_cls
+
+            if self.args.output_hiddens:
+                with torch.no_grad():
+                    teacher_hiddens = self.teacher_model(
+                        #TODO: add teacher forward to get hiddens
+                    )
+                
 
             sent_scores, mask = self.model(src, segs, clss, mask, mask_cls)
 

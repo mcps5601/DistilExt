@@ -176,7 +176,7 @@ def validate(args, device_id, pt, step):
     valid_iter = data_loader.Dataloader(args, load_dataset(args, 'valid', shuffle=False),
                                         args.batch_size, device,
                                         shuffle=False, is_test=False)
-    trainer = build_trainer(args, device_id, model, None)
+    trainer = build_trainer(args, device_id, model, None, None)
     stats = trainer.validate(valid_iter, step)
     return stats.xent()
 
@@ -206,7 +206,7 @@ def test_ext(args, device_id, pt, step):
     test_iter = data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False),
                                        args.test_batch_size, device,
                                        shuffle=False, is_test=True)
-    trainer = build_trainer(args, device_id, model, None)
+    trainer = build_trainer(args, device_id, model, None, None)
     start = time.time()
     trainer.test(test_iter, step)
     end = time.time()
@@ -261,7 +261,23 @@ def train_single_ext(args, device_id):
 
     logger.info(model)
 
-    trainer = build_trainer(args, device_id, model, optim)
+    if args.output_hiddens: #TODO: change the command to get hiddens from model
+        logger.info('Loading checkpoint from %s' % args.test_from)
+        teacher_checkpoint = torch.load(
+            args.test_from,
+            map_location=lambda storage,
+            loc: storage
+        )
+        opt = vars(teacher_checkpoint['opt'])
+        for k in opt.keys():
+            if (k in model_flags):
+                setattr(args, k, opt[k])
+        teacher_model = ExtSummarizer(args, device, teacher_checkpoint)
+        teacher_model.eval()
+    else:
+        teacher_model = None
+
+    trainer = build_trainer(args, device_id, model, optim, teacher_model)
     trainer.train(train_iter_fct, args.train_steps)
 
 
@@ -313,3 +329,4 @@ def extract_soft(args, device_id, pt, step):
                                        shuffle=False, is_test=True)
         trainer = build_trainer(args, device_id, model, None)
         trainer.dump_soft(test_iter, step, pt_file)
+
