@@ -15,7 +15,7 @@ Some codes are borrowed from ONMT(https://github.com/OpenNMT/OpenNMT-py)
 
 
 ## Trained Student Models
-[CNN/DM DistilExt (8-layer Transformer)]()
+[CNN/DM DistilExt (8-layer Transformer)](https://drive.google.com/file/d/1nwZeSUmrahcoEgDmExLMU_Gn-KpLT5sb/view?usp=sharing)
 
 [XSum DistilExt (6-layer Transformer)](https://drive.google.com/file/d/1vU8HQeOyd8BXDvvUXaGzWQuX0HSBsQTk/view?usp=sharing)
 
